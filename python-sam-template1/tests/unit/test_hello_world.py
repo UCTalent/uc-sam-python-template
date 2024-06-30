@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from handler_hello_world import app
@@ -77,9 +79,11 @@ def test_lambda_handler(apigw_event):
     """
 
     ret = app.handler_hello_world(apigw_event, "")
-    data = ret["body"]
+    data = json.loads(ret["body"])
 
     assert ret["statusCode"]
     assert "message" in data
     assert "status" in data
     assert "code" in data
+    a = json.dumps(ret)
+    print(a)

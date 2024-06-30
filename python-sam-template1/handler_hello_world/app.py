@@ -9,6 +9,7 @@ def create_response():
     resp.body.data = {
         "message": f"hello, this is sam python template env = {GLOBAL_CONFIG.API_ENV}",
     }
+    resp.body = resp.body.json()  # CRITICAL: resp body must be json string
     return resp.dict()
 
 

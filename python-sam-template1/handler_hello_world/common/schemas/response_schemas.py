@@ -12,7 +12,7 @@ class EnumCode(int, Enum):
 
 class ResponseBodyBase(BaseModel):
     status: str = Field('ok')
-    code: EnumCode = Field(EnumCode.SUCCESS.value)
+    code: EnumCode = Field(EnumCode.SUCCESS)
     message: str = Field('')
     data: dict = Field({})
     raw_ai_prompt_message: str = Field('')

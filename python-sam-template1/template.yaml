@@ -17,6 +17,7 @@ Globals:
       LogFormat: JSON
   Api:
     TracingEnabled: true
+
 Resources:
   MyApi:
     Type: AWS::Serverless::Api
@@ -93,16 +94,17 @@ Resources:
       ResourceGroupName:
         Ref: ApplicationResourceGroup
       AutoConfigurationEnabled: 'true'
+
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   ApiUsagePlan:
     Description: ApiUsagePlan for Hello World function
-    Value: !Sub "${ApiUsagePlan}"
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/apigateway/main/apis/${ApiUsagePlan}/resources"
   ApiKey:
     Description: ApiKey for Hello World function
-    Value: !Sub "${ApiKey}"
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/apigateway/main/api-keys/${ApiKey}"
   MyApi:
     Description: API Gateway endpoint URL for Prod stage for Hello World function
     Value: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
