@@ -1,11 +1,18 @@
-import json
-import os
+from common.config.config import GLOBAL_CONFIG
+from common.schemas.response_schemas import ResponseBase
+from common.utils.aws_lamda_helper import log_lamda_execution_info
 
 
-# import requests
+def create_response():
+    resp = ResponseBase()
+    resp.body.message = 'hello world'
+    resp.body.data = {
+        "message": f"hello, this is sam python template env = {GLOBAL_CONFIG.API_ENV}",
+    }
+    return resp.dict()
 
 
-def lambda_handler(event, context):
+def handler_hello_world(event, context):
     """Sample pure Lambda function
 
     Parameters
@@ -27,19 +34,5 @@ def lambda_handler(event, context):
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
 
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
-
-    #     raise e
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "hello world",
-            "test": os.environ.get('version', '0'),
-            "DUMMY_VARIABLE": os.environ.get('DUMMY_VARIABLE', '0'),
-        }),
-    }
+    log_lamda_execution_info(context)
+    return create_response()

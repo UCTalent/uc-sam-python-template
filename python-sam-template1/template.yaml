@@ -18,23 +18,66 @@ Globals:
   Api:
     TracingEnabled: true
 Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Join [ "", [ { "Ref": "AWS::StackName" }, "-myapi" ] ]
+      StageName: Prod
+      Auth:
+        ApiKeyRequired: true # sets for all methods
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Join [ "", [ { "Ref": "AWS::StackName" }, "-apikey" ] ]
+      Description: "CloudFormation API Key V1"
+      Enabled: true
+      Value: "{{resolve:secretsmanager:uc_sam_python_template_1:SecretString:API_KEY}}"
+
+  ApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+        - ApiId: !Ref MyApi
+          Stage: !Ref MyApiProdStage
+      Description: !Join [ " ", [ { "Ref": "AWS::StackName" }, "usage plan" ] ]
+      Quota:
+        Limit: 5000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 50
+        RateLimit: 20
+      UsagePlanName: !Join [ "", [ { "Ref": "AWS::StackName" }, "-usage-plan" ] ]
+    DependsOn: MyApi
+
+  ApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiUsagePlan
+    DependsOn: [ApiUsagePlan, ApiKey]
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: hello_world/
-      Handler: app.lambda_handler
+      CodeUri: handler_hello_world/
+      Handler: app.handler_hello_world
       Runtime: python3.11
       Environment:
         Variables:
-          version: v1
-          DUMMY_VARIABLE: "{{resolve:secretsmanager:key2:SecretString:key2}}"
+          API_ENV: "{{resolve:secretsmanager:uc_sam_python_template_1:SecretString:API_ENV}}"
+          API_KEY: "{{resolve:secretsmanager:uc_sam_python_template_1:SecretString:API_KEY}}"
       Architectures:
-      - x86_64
+        - x86_64
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /hello1
+            RestApiId: !Ref MyApi
+            Auth:
+              ApiKeyRequired: true
+            Path: /hello_world
             Method: get
 
   ApplicationResourceGroup:
@@ -54,9 +97,18 @@ Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  ApiUsagePlan:
+    Description: ApiUsagePlan for Hello World function
+    Value: !Sub "${ApiUsagePlan}"
+  ApiKey:
+    Description: ApiKey for Hello World function
+    Value: !Sub "${ApiKey}"
+  MyApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
   HelloWorldApi:
     Description: API Gateway endpoint URL for Prod stage for Hello World function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello1/"
+    Value: !Sub "https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello_world/"
   HelloWorldFunction:
     Description: Hello World Lambda Function ARN
     Value: !GetAtt HelloWorldFunction.Arn

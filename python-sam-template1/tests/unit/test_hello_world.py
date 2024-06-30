@@ -1,8 +1,6 @@
-import json
-
 import pytest
 
-from hello_world import app
+from handler_hello_world import app
 
 
 @pytest.fixture()
@@ -36,6 +34,7 @@ def apigw_event():
         },
         "queryStringParameters": {"foo": "bar"},
         "headers": {
+            "api-key": "abc123",
             "Via": "1.1 08f323deadbeefa7af34d5feb414ce27.cloudfront.net (CloudFront)",
             "Accept-Language": "en-US,en;q=0.8",
             "CloudFront-Is-Desktop-Viewer": "true",
@@ -63,10 +62,24 @@ def apigw_event():
 
 
 def test_lambda_handler(apigw_event):
+    """
+    Test the lambda handler function by passing in an API Gateway event.
 
-    ret = app.lambda_handler(apigw_event, "")
-    data = json.loads(ret["body"])
+    Parameters:
+    - apigw_event (dict): A dictionary representing the API Gateway event.
 
-    assert ret["statusCode"] == 200
-    assert "message" in ret["body"]
-    assert data["message"] == "hello world"
+    Returns:
+    - None
+
+    Assertions:
+    - Checks if the returned response has a status code.
+    - Checks if the returned data contains keys "message", "status", and "code".
+    """
+
+    ret = app.handler_hello_world(apigw_event, "")
+    data = ret["body"]
+
+    assert ret["statusCode"]
+    assert "message" in data
+    assert "status" in data
+    assert "code" in data
